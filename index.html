@@ -59,6 +59,53 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 2;
         }
+        .results-card {
+            background: var(--success-gradient);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(79, 172, 254, 0.3);
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transform: translateY(-10px);
+            margin-bottom: 2rem;
+        }
+        .results-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+        }
+        .results-card:hover::before {
+            animation: shine 1s ease-in-out;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .results-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        .results-card .count {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .results-card .text {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 500;
+        }
         .table {
             background: white;
             border-radius: 10px;
@@ -112,6 +159,19 @@
             .team-card {
                 margin-bottom: 1rem;
             }
+            .results-card {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+            .results-card .count {
+                font-size: 3rem;
+            }
+            .results-card .icon {
+                font-size: 2.5rem;
+            }
+            .results-card .text {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -121,6 +181,17 @@
     </header>
 
     <main class="container-fluid p-4">
+        <!-- Results Highlight Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="results-card">
+                    <i class="bi bi-trophy-fill icon"></i>
+                    <h2 class="count" id="resultsCount">Loading...</h2>
+                    <p class="text">After Results</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Teams Section -->
         <div class="mb-4">
             <h2 class="mb-3 fw-bold text-dark">Teams Overview</h2>
@@ -413,6 +484,7 @@
             const q = query(collection(db, 'programmes'), where('finalized', '==', true));
             unsubscribeProgrammes = onSnapshot(q, (snapshot) => {
                 finalizedProgrammes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                document.getElementById('resultsCount').textContent = finalizedProgrammes.length;
                 computeParticipations();
             });
         }
