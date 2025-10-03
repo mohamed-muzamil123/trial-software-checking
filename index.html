@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Panel - Fest Management Software</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, #f0f2f5, #ffffff);
+            min-height: 100vh;
+        }
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .team-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        .team-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        .table thead th {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .btn {
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .toast-container {
+            z-index: 1055;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        @media (max-width: 768px) {
+            .team-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="mb-0 fw-bold">Check Panel</h1>
+    </header>
+
+    <main class="container-fluid p-4">
+        <!-- Teams Section -->
+        <div class="mb-4">
+            <h2 class="mb-3 fw-bold text-dark">Teams Overview</h2>
+            <div id="teamCards" class="row"></div>
+        </div>
+
+        <!-- Students Section -->
+        <div class="search-section">
+            <h2 class="mb-3 fw-bold text-dark">Students</h2>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="nameSearch" placeholder="Search by student name..." onkeyup="filterStudents()">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="chestSearch" placeholder="Search by chest number..." onkeyup="filterStudents()">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="teamFilter" onchange="filterStudents()">
+                        <option value="">All Teams</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="catFilter" onchange="filterStudents()">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <select class="form-select" id="sortSelect" onchange="filterStudents()">
+                        <option value="chest-asc">Chest Number Ascending</option>
+                        <option value="onstage-desc">On-Stage Points Descending</option>
+                        <option value="offstage-desc">Off-Stage Points Descending</option>
+                        <option value="total-desc">Total Points Descending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Chest Number</th>
+                            <th>Student Name</th>
+                            <th>Category</th>
+                            <th>Team</th>
+                            <th>Points</th>
+                            <th>View Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Points Modal -->
+    <div class="modal fade" id="pointsModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pointsTitle">Student Points</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>On-Stage Points</h6>
+                                <p class="fw-bold fs-4" id="onStagePoints">0</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>Off-Stage Points</h6>
+                                <p class="fw-bold fs-4" id="offStagePoints">0</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>Total Points</h6>
+                                <p class="fw-bold fs-4" id="totalPoints">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="detailsTitle">Student Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>On-Stage Points</h6>
+                                <p class="fw-bold fs-4" id="detailsOnStage">0</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>Off-Stage Points</h6>
+                                <p class="fw-bold fs-4" id="detailsOffStage">0</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-card">
+                                <h6>Total Points</h6>
+                                <p class="fw-bold fs-4" id="detailsTotal">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <h6>Programme Participation</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Programme Name</th>
+                                    <th>Category</th>
+                                    <th>Points</th>
+                                    <th>Place</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="toastBody"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, updateDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0eal8jWB6ksEpFCEYMRIOhzpAROwlXns",
+            authDomain: "festhub-d7138.firebaseapp.com",
+            projectId: "festhub-d7138",
+            storageBucket: "festhub-d7138.firebasestorage.app",
+            messagingSenderId: "396565568701",
+            appId: "1:396565568701:web:c2c4001be99eef231a6bd4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let students = [];
+        let teams = [];
+        let finalizedProgrammes = [];
+        let participations = {};
+        let uniqueTeams = [];
+        let uniqueCategories = [];
+        let unsubscribeStudents = null;
+        let unsubscribeTeams = null;
+        let unsubscribeProgrammes = null;
+        let currentSort = 'chest-asc';
+        let currentTeamFilter = '';
+        let currentCatFilter = '';
+        let nameSearch = '';
+        let chestSearch = '';
+
+        // Utils
+        window.showToast = function(message, type = 'success') {
+            const toastEl = document.getElementById('liveToast');
+            const toastBody = document.getElementById('toastBody');
+            toastBody.textContent = message;
+            toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        };
+
+        function computeParticipations() {
+            participations = {};
+            const suffix = ['st', 'nd', 'rd', 'th'];
+            finalizedProgrammes.forEach(p => {
+                const marksDetails = p.marksDetails || {};
+                Object.entries(marksDetails).forEach(([studentId, details]) => {
+                    if (!participations[studentId]) participations[studentId] = [];
+                    const place = details.place ? `${details.place}${suffix[Math.min(3, details.place - 1)]}` : 'None';
+                    participations[studentId].push({
+                        name: p.name,
+                        type: p.type,
+                        points: details.points || 0,
+                        place
+                    });
+                });
+            });
+        }
+
+        function computeUnique() {
+            uniqueTeams = [...new Set(students.map(s => s.team))].sort();
+            uniqueCategories = [...new Set(students.map(s => s.category || ''))].filter(c => c).sort();
+            populateFilters();
+        }
+
+        function populateFilters() {
+            const teamSelect = document.getElementById('teamFilter');
+            teamSelect.innerHTML = '<option value="">All Teams</option>' + uniqueTeams.map(t => `<option value="${t}">${t}</option>`).join('');
+            const catSelect = document.getElementById('catFilter');
+            catSelect.innerHTML = '<option value="">All Categories</option>' + uniqueCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function computeTeamData() {
+            teams.forEach(t => {
+                t.numStudents = students.filter(s => s.team === t.name).length;
+            });
+            renderTeamCards();
+        }
+
+        function renderTeamCards() {
+            const container = document.getElementById('teamCards');
+            if (teams.length === 0) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info text-center">No teams found.</div></div>';
+                return;
+            }
+            container.innerHTML = teams.sort((a, b) => a.name.localeCompare(b.name)).map(t => `
+                <div class="col-md-3 col-sm-6">
+                    <div class="team-card" onclick="filterByTeam('${t.name}')">
+                        <h5 class="fw-bold">${t.name}</h5>
+                        <p class="text-muted">Total Points: <span class="fw-bold">${t.marks?.total || 0}</span></p>
+                        <p class="text-muted">Students: <span class="fw-bold">${t.numStudents}</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadStudents() {
+            if (unsubscribeStudents) unsubscribeStudents();
+            const q = query(collection(db, 'students'), orderBy('chestNo'));
+            unsubscribeStudents = onSnapshot(q, (snapshot) => {
+                students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                computeUnique();
+                computeTeamData();
+                filterStudents();
+            });
+        }
+
+        function loadTeams() {
+            if (unsubscribeTeams) unsubscribeTeams();
+            const q = query(collection(db, 'teams'), orderBy('name'));
+            unsubscribeTeams = onSnapshot(q, (snapshot) => {
+                teams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                computeTeamData();
+            });
+        }
+
+        function loadFinalizedProgrammes() {
+            if (unsubscribeProgrammes) unsubscribeProgrammes();
+            const q = query(collection(db, 'programmes'), where('finalized', '==', true));
+            unsubscribeProgrammes = onSnapshot(q, (snapshot) => {
+                finalizedProgrammes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                computeParticipations();
+            });
+        }
+
+        window.filterByTeam = function(teamName) {
+            document.getElementById('teamFilter').value = teamName;
+            filterStudents();
+        };
+
+        window.filterStudents = function() {
+            nameSearch = document.getElementById('nameSearch').value.toLowerCase();
+            chestSearch = document.getElementById('chestSearch').value.toLowerCase();
+            currentTeamFilter = document.getElementById('teamFilter').value;
+            currentCatFilter = document.getElementById('catFilter').value;
+            currentSort = document.getElementById('sortSelect').value;
+
+            let filtered = students.filter(s =>
+                s.name.toLowerCase().includes(nameSearch) &&
+                s.chestNo.toString().toLowerCase().includes(chestSearch) &&
+                (currentTeamFilter === '' || s.team === currentTeamFilter) &&
+                (currentCatFilter === '' || (s.category || '') === currentCatFilter)
+            );
+
+            filtered.sort((a, b) => {
+                let va, vb;
+                switch (currentSort) {
+                    case 'chest-asc':
+                        va = a.chestNo;
+                        vb = b.chestNo;
+                        return va - vb;
+                    case 'onstage-desc':
+                        va = a.marks?.onStage || 0;
+                        vb = b.marks?.onStage || 0;
+                        return vb - va;
+                    case 'offstage-desc':
+                        va = a.marks?.offStage || 0;
+                        vb = b.marks?.offStage || 0;
+                        return vb - va;
+                    case 'total-desc':
+                        va = a.marks?.total || 0;
+                        vb = b.marks?.total || 0;
+                        return vb - va;
+                    default:
+                        return 0;
+                }
+            });
+
+            renderStudentTable(filtered);
+        };
+
+        function renderStudentTable(studs) {
+            const tbody = document.getElementById('studentTbody');
+            if (studs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = studs.map(s => `
+                <tr>
+                    <td>${s.chestNo}</td>
+                    <td>${s.name}</td>
+                    <td>${s.category || ''}</td>
+                    <td>${s.team}</td>
+                    <td><button class="btn btn-info btn-sm" onclick="openPointsModal('${s.id}')">Points</button></td>
+                    <td><button class="btn btn-secondary btn-sm" onclick="openDetailsModal('${s.id}')">View Details</button></td>
+                </tr>
+            `).join('');
+        }
+
+        window.openPointsModal = function(sid) {
+            const s = students.find(ss => ss.id === sid);
+            if (!s) return;
+            document.getElementById('pointsTitle').textContent = `${s.name} Points`;
+            document.getElementById('onStagePoints').textContent = s.marks?.onStage || 0;
+            document.getElementById('offStagePoints').textContent = s.marks?.offStage || 0;
+            document.getElementById('totalPoints').textContent = s.marks?.total || 0;
+            new bootstrap.Modal(document.getElementById('pointsModal')).show();
+        };
+
+        window.openDetailsModal = function(sid) {
+            const s = students.find(ss => ss.id === sid);
+            if (!s) return;
+            document.getElementById('detailsTitle').textContent = `${s.name} Details`;
+            document.getElementById('detailsOnStage').textContent = s.marks?.onStage || 0;
+            document.getElementById('detailsOffStage').textContent = s.marks?.offStage || 0;
+            document.getElementById('detailsTotal').textContent = s.marks?.total || 0;
+
+            const parts = participations[sid] || [];
+            const tbody = document.getElementById('partTbody');
+            tbody.innerHTML = parts.length === 0 ? '<tr><td colspan="4" class="text-center">No participations found.</td></tr>' : parts.map(p => `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.type}</td>
+                    <td>${p.points}</td>
+                    <td>${p.place}</td>
+                </tr>
+            `).join('');
+
+            new bootstrap.Modal(document.getElementById('detailsModal')).show();
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudents();
+            loadTeams();
+            loadFinalizedProgrammes();
+            document.getElementById('studentTbody').innerHTML = '<tr><td colspan="6" class="text-center">Loading students...</td></tr>';
+            document.getElementById('teamCards').innerHTML = '<div class="col-12"><div class="alert alert-info text-center">Loading teams...</div></div>';
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
