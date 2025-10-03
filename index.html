@@ -40,10 +40,24 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             margin-bottom: 1rem;
             cursor: pointer;
+            position: relative;
         }
         .team-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .rank-badge {
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            background: var(--success-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2;
         }
         .table {
             background: white;
@@ -335,7 +349,23 @@
         function computeTeamData() {
             teams.forEach(t => {
                 t.numStudents = students.filter(s => s.team === t.name).length;
+                t.totalPoints = t.marks?.total || 0;
             });
+            // Compute ranks
+            const sortedTeamsForRank = [...teams].sort((a, b) => b.totalPoints - a.totalPoints);
+            let currentRank = 1;
+            for (let i = 0; i < sortedTeamsForRank.length; ) {
+                const currentPoints = sortedTeamsForRank[i].totalPoints;
+                let j = i + 1;
+                while (j < sortedTeamsForRank.length && sortedTeamsForRank[j].totalPoints === currentPoints) {
+                    j++;
+                }
+                for (let k = i; k < j; k++) {
+                    sortedTeamsForRank[k].rank = currentRank;
+                }
+                i = j;
+                currentRank++;
+            }
             renderTeamCards();
         }
 
@@ -345,11 +375,13 @@
                 container.innerHTML = '<div class="col-12"><div class="alert alert-info text-center">No teams found.</div></div>';
                 return;
             }
-            container.innerHTML = teams.sort((a, b) => a.name.localeCompare(b.name)).map(t => `
+            const sortedForDisplay = [...teams].sort((a, b) => (b.totalPoints - a.totalPoints) || a.name.localeCompare(b.name));
+            container.innerHTML = sortedForDisplay.map(t => `
                 <div class="col-md-3 col-sm-6">
                     <div class="team-card" onclick="filterByTeam('${t.name}')">
+                        <div class="rank-badge">#${t.rank}</div>
                         <h5 class="fw-bold">${t.name}</h5>
-                        <p class="text-muted">Total Points: <span class="fw-bold">${t.marks?.total || 0}</span></p>
+                        <p class="text-muted">Total Points: <span class="fw-bold">${t.totalPoints}</span></p>
                         <p class="text-muted">Students: <span class="fw-bold">${t.numStudents}</span></p>
                     </div>
                 </div>
